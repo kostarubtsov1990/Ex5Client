@@ -10,6 +10,7 @@
 
 #include "GameFlow.h"
 #include "ReversiGame.h"
+#include "PrintingsHandler.h"
 
 /*
  * MultiPlayerFlow is responsible for the flow of the two players program.
@@ -24,13 +25,14 @@ enum gameType {local, remote};
 class MultiPlayerFlow : public GameFlow {
 public:
 //    MultiPlayerFlow();
-    MultiPlayerFlow(Game* game, gameType type);
+    MultiPlayerFlow(Game* game, gameType type, PrintingsHandler handler);
     virtual void Run();
     ~MultiPlayerFlow();
 
 private:
     
     gameType type;
+    PrintingsHandler handler;
     
     void RunLocal();
     void RunRemote();

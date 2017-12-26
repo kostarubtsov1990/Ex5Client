@@ -14,6 +14,11 @@
 #include "../include/GameClient.h"
 #define BUF_SIZE 1024
 
+#define START_NEW_GAME 1
+#define LIST_OF_AVAILABLE_GAMES 2
+#define JOIN_GAME 3
+
+
 using namespace std;
 /*
 MultiPlayerFlow::MultiPlayerFlow() {
@@ -21,7 +26,8 @@ MultiPlayerFlow::MultiPlayerFlow() {
 }
 */
 
-MultiPlayerFlow::MultiPlayerFlow(Game* game, gameType type): type(type),  GameFlow::GameFlow(game){}
+MultiPlayerFlow::MultiPlayerFlow(Game* game, gameType type, PrintingsHandler handler): type(type), handler(handler),
+                                                                                       GameFlow::GameFlow(game){}
 
 void MultiPlayerFlow::Run() {
     //This will run one of the possible game types of multi player.
@@ -85,26 +91,92 @@ void MultiPlayerFlow::RunRemote() {
         cout << "Failed to connect to server. Reason: " << msg << endl;
         exit(-1);
     }
+
+    while (true) {//client
+        int option;
+        string chosenCommand = "";
+        //print the optional commands that the user can send to the server: start <name>, list_games, join <name>
+        this->handler.DisplayPossibleCommands();
+        cin >> option;
+
+        cout << "Please enter the following command in the correct format: " << endl;
+        if (option == START_NEW_GAME) {
+
+        }
+        else if (option == LIST_OF_AVAILABLE_GAMES) {
+            cout << "Please enter the following command in the correct format: list_games " << endl;
+            cin >> chosenCommand;
+            //send to the server the command entered by the user
+            int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
+            //read the respone from the server
+            var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+            cout << answerBuffer << endl;
+            break;
+            
+        }
+        else // option == JOIN_GAME
+        {
+            cout << "Please enter the following command in the correct format: join <name>" << endl;
+            cin >> chosenCommand;
+            //send to the server the command entered by the user
+            int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
+            //read the response from the server
+            var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+            //handle game
+            if (strcmp(answerBuffer,"joined_to_game") == 0) {
+                player = oplayer;
+                opponentPlayer = xplayer;
+                playerSymbol = X;
+                opponentPlayerSymbol = O;
+
+                cout << "Wait for first move..." << endl << endl;
+                //second player reads the FIRST move that is done by client1 (=first player/Xplayer)
+                var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+                //second player updates its own board with the step player1 has done.
+                logic->CheckPossibleMoves(board, opponentPlayer);
+                logic->UpdateBoard(board, atoi(&answerBuffer[0]), atoi(&answerBuffer[2]), opponentPlayerSymbol);
+            }
+            //server returned either "game_is_full" or "game_not_exist"
+            else {
+                continue;
+            }
+
+        }
+
+        //send to the server the command entered by the user
+        int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
+        if (var == -1) {
+            handler.FailureMessage();
+//            exit(-1);
+        }
+        if (var == 0) {
+            break; //?
+        }
+        //read the respone from the server
+        var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+        if (var == -1) {
+            handler.FailureMessage();
+//            exit(-1);
+        }
+    }
     /*
-     *TO DO:
-     * PRINT THE OPTIONAL COMMANDS THAT THE USER CAN SEND TO THE SERVER.
-     * start <name>
-     * list_games
-     * join <name>
      *
      * SEND TO THE SERVER ONE OF THE POSSIBLE COMMANDS IN THE CORRECT FORMAT.
      * (MAKE SURE THAT THE CLIENT CAN SEND ONLY THESE FORMATS AND NOT UNRECOGNIZED STRINGS).
      *
      * IF THE USER CHOOSES GAME_LIST COMMAND, THEN PRINT THE AVAILABLE GAMES
      * SENT BY THE SERVER.
+     * (anyway the client will print the response from the server. if no game available,
+     * correct message will be printed).
      * PRINT CORRENT MESSAGE OF THE GAMES AVAILABLE IN THE SERVER SIDE
      * (TAKE INTO ACCOUNT THAT IN THIS CASE, CLIENT MIGHT NOT SENDS IMMEDIATELY A NEW_GAME COMMAND OR A JOIN COMMAND.)
      *
      * IF THE USER CHOOSES JOIN <NAME>, RESPONSES FROM THE SERVER MIGHT BE:
      * 'game_not_exist', 'game_is_full', 'joined_to_game'.
      * HANDLE EACH RESPONSE ACCORDINGLY.
+     * concatenate to game_not_exist and game_is_full a message that ask the client to choose another name
      *
-     * IF THE USER CHOOSES START <NAME>. -1 might be returned by the server, indicating that such game is already exists.
+     * IF THE USER CHOOSES START <NAME>. -1 might be returned by the server, indicating that such game is already exist.
      * ask the user to enter another name.
      *
      *

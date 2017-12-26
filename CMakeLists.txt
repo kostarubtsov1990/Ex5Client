@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(Ex4Client)
+project(Ex5Client)
 
 set(CMAKE_CXX_STANDARD 98)
 
@@ -29,15 +29,15 @@ set(SOURCE_FILES
         src/SinglePlayerFlow.cpp
         src/GameMenu.cpp
         src/ReversiGameMenu.cpp
-        )
+        src/PrintingsHandler.cpp)
 
 add_library(reversiGame STATIC ${SOURCE_FILES} ${HEADER_FILES})
 
-set(SOURCE_FILES main.cpp src/GameClient.cpp include/GameClient.h)
-add_executable(Ex4Client ${SOURCE_FILES})
+set(SOURCE_FILES main.cpp src/GameClient.cpp include/GameClient.h include/PrintingsHandler.h)
+add_executable(Ex5Client ${SOURCE_FILES})
 
 add_subdirectory(test)
 
-target_link_libraries(Ex4Client reversiGame)
+target_link_libraries(Ex5Client reversiGame)
 
 
