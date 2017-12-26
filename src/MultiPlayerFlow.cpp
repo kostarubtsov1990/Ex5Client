@@ -57,10 +57,6 @@ void MultiPlayerFlow::RunLocal() {
 }
 
 void MultiPlayerFlow::RunRemote() {
-    playerIdentifier player;
-    playerIdentifier opponentPlayer;
-    boardContent playerSymbol;
-    boardContent opponentPlayerSymbol;
 
     GameLogic* logic = game->GetLogic();
     Board* board = game->GetBoard();
@@ -68,8 +64,6 @@ void MultiPlayerFlow::RunRemote() {
     //contains player's move
     char answerBuffer [BUF_SIZE];
     bzero(&answerBuffer,sizeof(answerBuffer));
-
-    int gameClientSocket;
 
     //Read the settings from file.
     const char* fileName = "settings.txt";
@@ -82,17 +76,6 @@ void MultiPlayerFlow::RunRemote() {
     int port = atoi(portString.c_str());
 
 
-    //first argument is the IP of the computer which the server runs on.
-    //second argument is the port of the server
-    GameClient gameClient(ip.c_str(), port);
-    try {
-        //sort of file descriptor. after this line, client is connected to server
-        gameClientSocket = gameClient.connectToServer();
-    }catch (const char* msg) {
-        cout << "Failed to connect to server. Reason: " << msg << endl;
-        exit(-1);
-    }
-
     while (true) {//client
         int option;
         string chosenCommand = "";
@@ -100,9 +83,63 @@ void MultiPlayerFlow::RunRemote() {
        PrintingsHandler::DisplayPossibleCommands();
         cin >> option;
 
-        cout << "Please enter the following command in the correct format: " << endl;
-        if (option == START_NEW_GAME) {
+        cout << "Please enter the following command in the correct format: start <name>" << endl;
 
+        cin >> chosenCommand;
+
+
+        //first argument is the IP of the computer which the server runs on.
+        //second argument is the port of the server
+        GameClient gameClient(ip.c_str(), port);
+        try {
+            //sort of file descriptor. after this line, client is connected to server
+            gameClientSocket = gameClient.connectToServer();
+        }catch (const char* msg) {
+            cout << "Failed to connect to server. Reason: " << msg << endl;
+            exit(-1);
+        }
+
+        int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
+
+        if (var == -1) {
+            cout << "Error reading arg1" << endl;
+            return exit(-1);
+        }
+        if (var == 0) {
+            cout << "Client disconnected" << endl;
+            return exit(-1);
+        }
+
+
+        if (option == START_NEW_GAME) {
+            player = xplayer;
+            opponentPlayer = oplayer;
+            playerSymbol = X;
+            opponentPlayerSymbol = O;
+
+            var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+
+            if (var == -1) {
+                cout << "Error reading arg1" << endl;
+                return exit(-1);
+            }
+            if (var == 0) {
+                cout << "Client disconnected" << endl;
+                return exit(-1);
+            }
+
+            if (strcmp(answerBuffer,"game_created_successfully") == 0) {
+
+                var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+
+                if (strcmp(answerBuffer,"start_game") == 0) {
+                    RunGame();
+                }
+            }
+            else{
+                close(gameClientSocket);
+                continue;
+            }
         }
         else if (option == LIST_OF_AVAILABLE_GAMES) {
             cout << "Please enter the following command in the correct format: list_games " << endl;
@@ -111,8 +148,10 @@ void MultiPlayerFlow::RunRemote() {
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
             //read the respone from the server
             var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+            close(gameClientSocket);
+
             cout << answerBuffer << endl;
-            break;
+            continue;
             
         }
         else // option == JOIN_GAME
@@ -127,37 +166,19 @@ void MultiPlayerFlow::RunRemote() {
             if (strcmp(answerBuffer,"joined_to_game") == 0) {
                 player = oplayer;
                 opponentPlayer = xplayer;
-                playerSymbol = X;
-                opponentPlayerSymbol = O;
-
-                cout << "Wait for first move..." << endl << endl;
-                //second player reads the FIRST move that is done by client1 (=first player/Xplayer)
+                playerSymbol = O;
+                opponentPlayerSymbol = X;
                 var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
-                //second player updates its own board with the step player1 has done.
-                logic->CheckPossibleMoves(board, opponentPlayer);
-                logic->UpdateBoard(board, atoi(&answerBuffer[0]), atoi(&answerBuffer[2]), opponentPlayerSymbol);
+                if (strcmp(answerBuffer,"start_game") == 0) {
+                    RunGame();
+                }
             }
             //server returned either "game_is_full" or "game_not_exist"
             else {
+                close(gameClientSocket);
                 continue;
             }
 
-        }
-
-        //send to the server the command entered by the user
-        int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
-        if (var == -1) {
-            handler.FailureMessage();
-//            exit(-1);
-        }
-        if (var == 0) {
-            break; //?
-        }
-        //read the respone from the server
-        var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
-        if (var == -1) {
-            handler.FailureMessage();
-//            exit(-1);
         }
     }
     /*
@@ -184,104 +205,6 @@ void MultiPlayerFlow::RunRemote() {
      *
      *
      */
-    //read server's message: "wait for opponent" (if it's first client), or "wait for first move" (if it's second client).
-    int n = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
-
-    //first player (the process of Client1 will enter this condition)
-    if (strcmp(answerBuffer, "wait_for_opponent") == 0){
-
-        player = xplayer;
-        opponentPlayer = oplayer;
-        playerSymbol = X;
-        opponentPlayerSymbol = O;
-
-        cout << "Wait for opponent..." << endl << endl;
-        //this line is a "block line".
-        //when second player is connected, read the "START" string that was sent by the server
-        //and block is released.
-        n = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
-    }
-    //sec player (the process of Client2 will enter this condition
-    else if (strcmp(answerBuffer, "Wait_for_first_move") == 0) {
-        player = oplayer;
-        opponentPlayer = xplayer;
-        playerSymbol = O;
-        opponentPlayerSymbol = X;
-
-        cout << "Wait for first move..." << endl << endl;
-        //second player reads the FIRST move that is done by client1 (=first player/Xplayer)
-        n = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
-        //second player updates its own board with the step player1 has done.
-        logic->CheckPossibleMoves(board, opponentPlayer);
-        logic->UpdateBoard(board, atoi(&answerBuffer[0]), atoi(&answerBuffer[2]), opponentPlayerSymbol);
-        //board->printBoard();
-        //cout << endl << endl;
-        //n == -1 , n == 0..clients disconnected
-    } else {
-        cout<<"Writing error occurred";
-        return;
-    }
-
-    //both clients print their board (Client1's board will be the initial board.
-    //Client2's board will be the board updated with Client1's step.
-    cout << "current board:" << endl << endl;
-    board->printBoard();
-
-    if (opponentPlayer == xplayer)
-        cout << "X played (" << ++answerBuffer[0] << "," << ++answerBuffer[2] << ")" << endl;
-
-    //each player plays its turn till game's over.
-    while (!logic->IsGameOver(board)) {
-        //current player performs a step (chooses a cell and updates its own board). result contains its step.
-        string result = RunCurrentTurnOfTheGame(player, playerSymbol);
-        //To add failure condition.
-        //current player sends to the server its step (=(x,y)).
-        int n = write(gameClientSocket, result.c_str(), strlen(result.c_str()) + 1);
-        //Client1 will enter this condition
-        if (player == xplayer)
-            cout << "Wait for second player to take a move..." << endl << endl;
-        //Client2 will enter this else
-        else
-            cout << "Wait for first player to take a move..." << endl << endl;
-
-        //current player reads from the server the step that its opponent has done.
-        n = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
-
-        //opponent player sent "END", current player (=current client process) declares winner and closes connection
-        if (strcmp(answerBuffer, "END") == 0) {
-            logic->DeclareWinner(board);
-            close(gameClientSocket);
-            return;
-        }
-        //if its opponent performed a step, then he updates its own board with the opponent step.
-        else if (strcmp(answerBuffer, "no_moves")) {
-            logic->CheckPossibleMoves(board, opponentPlayer);
-            logic->UpdateBoard(board, atoi(&answerBuffer[0]), atoi(&answerBuffer[2]), opponentPlayerSymbol);
-
-            //current client prints its updated board (updated with its opponent step)
-            cout << "current board:" << endl << endl;
-            board->printBoard();
-
-            if (opponentPlayer == xplayer)
-                cout << "X played (" << ++answerBuffer[0] << "," << ++answerBuffer[2] << ")" << endl;
-            else
-                cout << "O played (" << ++answerBuffer[0] << "," << ++answerBuffer[2] << ")" << endl;
-        //answerbuffer is "no moves"
-        } else{
-            cout << "Opponent player had no possible moves." << endl;
-        }
-
-
-    }
-    //this code will be done by only one of the clients.
-    string endMassage = "END";
-    //send END message to the server who passes it to the other player that will declare winner and disconnect.
-    n = write(gameClientSocket, endMassage.c_str(), strlen(endMassage.c_str()) + 1);
-
-    //declare the winner of the game (or draw)
-    logic->DeclareWinner(board);
-    //current player disconnects
-    close(gameClientSocket);
 }
 
 string MultiPlayerFlow::RunCurrentTurnOfTheGame(playerIdentifier id,
@@ -363,6 +286,87 @@ Cell MultiPlayerFlow::InputHandler() const {
         col--;
         return Cell(row, col);
     }
+}
+
+void MultiPlayerFlow::RunGame() {
+
+    GameLogic* logic = game->GetLogic();
+    Board* board = game->GetBoard();
+    char answerBuffer [BUF_SIZE];
+    //sec player (the process of Client2 will enter this condition
+    if (player == oplayer) {
+
+        cout << "Wait for first move..." << endl << endl;
+        //second player reads the FIRST move that is done by client1 (=first player/Xplayer)
+        int n = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+        //second player updates its own board with the step player1 has done.
+        logic->CheckPossibleMoves(board, opponentPlayer);
+        logic->UpdateBoard(board, atoi(&answerBuffer[0]), atoi(&answerBuffer[2]), opponentPlayerSymbol);
+        //board->printBoard();
+        //cout << endl << endl;
+        //n == -1 , n == 0..clients disconnected
+    }
+
+    //both clients print their board (Client1's board will be the initial board.
+    //Client2's board will be the board updated with Client1's step.
+    cout << "current board:" << endl << endl;
+    board->printBoard();
+
+    if (opponentPlayer == xplayer)
+        cout << "X played (" << ++answerBuffer[0] << "," << ++answerBuffer[2] << ")" << endl;
+
+    //each player plays its turn till game's over.
+    while (!logic->IsGameOver(board)) {
+        //current player performs a step (chooses a cell and updates its own board). result contains its step.
+        string result = RunCurrentTurnOfTheGame(player, playerSymbol);
+        //To add failure condition.
+        //current player sends to the server its step (=(x,y)).
+        int n = write(gameClientSocket, result.c_str(), strlen(result.c_str()) + 1);
+        //Client1 will enter this condition
+        if (player == xplayer)
+            cout << "Wait for second player to take a move..." << endl << endl;
+            //Client2 will enter this else
+        else
+            cout << "Wait for first player to take a move..." << endl << endl;
+
+        //current player reads from the server the step that its opponent has done.
+        n = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+
+        //opponent player sent "END", current player (=current client process) declares winner and closes connection
+        if (strcmp(answerBuffer, "END") == 0) {
+            logic->DeclareWinner(board);
+            close(gameClientSocket);
+            return;
+        }
+            //if its opponent performed a step, then he updates its own board with the opponent step.
+        else if (strcmp(answerBuffer, "no_moves")) {
+            logic->CheckPossibleMoves(board, opponentPlayer);
+            logic->UpdateBoard(board, atoi(&answerBuffer[0]), atoi(&answerBuffer[2]), opponentPlayerSymbol);
+
+            //current client prints its updated board (updated with its opponent step)
+            cout << "current board:" << endl << endl;
+            board->printBoard();
+
+            if (opponentPlayer == xplayer)
+                cout << "X played (" << ++answerBuffer[0] << "," << ++answerBuffer[2] << ")" << endl;
+            else
+                cout << "O played (" << ++answerBuffer[0] << "," << ++answerBuffer[2] << ")" << endl;
+            //answerbuffer is "no moves"
+        } else{
+            cout << "Opponent player had no possible moves." << endl;
+        }
+
+
+    }
+    //this code will be done by only one of the clients.
+    string endMassage = "END";
+    //send END message to the server who passes it to the other player that will declare winner and disconnect.
+    int n = write(gameClientSocket, endMassage.c_str(), strlen(endMassage.c_str()) + 1);
+
+    //declare the winner of the game (or draw)
+    logic->DeclareWinner(board);
+    //current player disconnects
+    close(gameClientSocket);
 }
 
 MultiPlayerFlow::~MultiPlayerFlow() {
