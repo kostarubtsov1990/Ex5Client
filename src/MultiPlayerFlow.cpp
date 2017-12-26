@@ -85,6 +85,32 @@ void MultiPlayerFlow::RunRemote() {
         cout << "Failed to connect to server. Reason: " << msg << endl;
         exit(-1);
     }
+    /*
+     *TO DO:
+     * PRINT THE OPTIONAL COMMANDS THAT THE USER CAN SEND TO THE SERVER.
+     * start <name>
+     * list_games
+     * join <name>
+     *
+     * SEND TO THE SERVER ONE OF THE POSSIBLE COMMANDS IN THE CORRECT FORMAT.
+     * (MAKE SURE THAT THE CLIENT CAN SEND ONLY THESE FORMATS AND NOT UNRECOGNIZED STRINGS).
+     *
+     * IF THE USER CHOOSES GAME_LIST COMMAND, THEN PRINT THE AVAILABLE GAMES
+     * SENT BY THE SERVER.
+     * PRINT CORRENT MESSAGE OF THE GAMES AVAILABLE IN THE SERVER SIDE
+     * (TAKE INTO ACCOUNT THAT IN THIS CASE, CLIENT MIGHT NOT SENDS IMMEDIATELY A NEW_GAME COMMAND OR A JOIN COMMAND.)
+     *
+     * IF THE USER CHOOSES JOIN <NAME>, RESPONSES FROM THE SERVER MIGHT BE:
+     * 'game_not_exist', 'game_is_full', 'joined_to_game'.
+     * HANDLE EACH RESPONSE ACCORDINGLY.
+     *
+     * IF THE USER CHOOSES START <NAME>. -1 might be returned by the server, indicating that such game is already exists.
+     * ask the user to enter another name.
+     *
+     *
+     *
+     *
+     */
     //read server's message: "wait for opponent" (if it's first client), or "wait for first move" (if it's second client).
     int n = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
 

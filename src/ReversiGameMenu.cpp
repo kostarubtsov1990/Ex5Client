@@ -50,6 +50,7 @@ void ReversiGameMenu::Start() {
                     userChoiceFlow = new MultiPlayerFlow(game,local);
                     break;
                 case 3:
+
                     userChoiceFlow = new MultiPlayerFlow(game,remote);
                     break;
             }
