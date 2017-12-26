@@ -7,11 +7,9 @@
 
 #include <cstdio>
 #include "../include/ReversiGameMenu.h"
-#include "../include/PrintingsHandler.h"
 
 
 void ReversiGameMenu::Start() {
-
     PrintingsHandler handler;
     handler.PrintOuterMenu();
 /*

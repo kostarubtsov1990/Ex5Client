@@ -30,12 +30,17 @@ public:
     ~MultiPlayerFlow();
 
 private:
-    
+    playerIdentifier player;
+    playerIdentifier opponentPlayer;
+    boardContent playerSymbol;
+    boardContent opponentPlayerSymbol;
     gameType type;
     PrintingsHandler handler;
+    int gameClientSocket;
     
     void RunLocal();
     void RunRemote();
+    void RunGame();
     void PrintHandler(playerIdentifier id, const vector<Cell>& possibleLocations) const;
     string RunCurrentTurnOfTheGame(playerIdentifier id, boardContent symbol);
     Cell InputHandler() const;
