@@ -15,7 +15,7 @@ set(HEADER_FILES
         include/SinglePlayerFlow.h
         include/GameMenu.h
         include/ReversiGameMenu.h
-        )
+        include/GameClient.h)
 
 set(SOURCE_FILES
         src/Board.cpp
@@ -29,11 +29,11 @@ set(SOURCE_FILES
         src/SinglePlayerFlow.cpp
         src/GameMenu.cpp
         src/ReversiGameMenu.cpp
-        src/PrintingsHandler.cpp)
+        src/GameClient.cpp)
 
 add_library(reversiGame STATIC ${SOURCE_FILES} ${HEADER_FILES})
 
-set(SOURCE_FILES main.cpp src/GameClient.cpp include/GameClient.h include/PrintingsHandler.h)
+set(SOURCE_FILES main.cpp src/PrintingsHandler.cpp include/PrintingsHandler.h)
 add_executable(Ex5Client ${SOURCE_FILES})
 
 add_subdirectory(test)

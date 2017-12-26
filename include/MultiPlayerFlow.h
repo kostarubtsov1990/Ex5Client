@@ -25,7 +25,7 @@ enum gameType {local, remote};
 class MultiPlayerFlow : public GameFlow {
 public:
 //    MultiPlayerFlow();
-    MultiPlayerFlow(Game* game, gameType type, PrintingsHandler handler);
+    MultiPlayerFlow(Game* game, gameType type);
     virtual void Run();
     ~MultiPlayerFlow();
 

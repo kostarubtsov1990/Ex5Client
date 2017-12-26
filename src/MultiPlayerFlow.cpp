@@ -12,6 +12,7 @@
 #include <fstream>
 #include "../include/MultiPlayerFlow.h"
 #include "../include/GameClient.h"
+
 #define BUF_SIZE 1024
 
 #define START_NEW_GAME 1
@@ -26,8 +27,8 @@ MultiPlayerFlow::MultiPlayerFlow() {
 }
 */
 
-MultiPlayerFlow::MultiPlayerFlow(Game* game, gameType type, PrintingsHandler handler): type(type), handler(handler),
-                                                                                       GameFlow::GameFlow(game){}
+MultiPlayerFlow::MultiPlayerFlow(Game* game, gameType type): type(type),
+                                                             GameFlow::GameFlow(game){}
 
 void MultiPlayerFlow::Run() {
     //This will run one of the possible game types of multi player.
@@ -96,7 +97,7 @@ void MultiPlayerFlow::RunRemote() {
         int option;
         string chosenCommand = "";
         //print the optional commands that the user can send to the server: start <name>, list_games, join <name>
-        this->handler.DisplayPossibleCommands();
+       PrintingsHandler::DisplayPossibleCommands();
         cin >> option;
 
         cout << "Please enter the following command in the correct format: " << endl;

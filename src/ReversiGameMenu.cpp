@@ -7,13 +7,12 @@
 
 #include <cstdio>
 #include "../include/ReversiGameMenu.h"
-#include "../include/PrintingsHandler.h"
+//#include "../include/PrintingsHandler.h"
 
 
 void ReversiGameMenu::Start() {
-
-    PrintingsHandler handler;
-    handler.PrintOuterMenu();
+//    PrintingsHandler handler;
+    PrintingsHandler::PrintOuterMenu();
 /*
     cout<<"~Welcome to Reversi Game~"<<endl<<endl;
     cout<<"Please choose below options:"<<endl;
@@ -25,7 +24,7 @@ void ReversiGameMenu::Start() {
     int gameOption;
     cin>>gameOption;
 
-    handler.PrintInnerMenu();
+    PrintingsHandler::PrintInnerMenu();
     /*
     cout<<endl<<"Please choose the game style:"<<endl;
     cout<<"1.Classic Game"<<endl;
@@ -54,11 +53,11 @@ void ReversiGameMenu::Start() {
                     userChoiceFlow = new SinglePlayerFlow(game);
                     break;
                 case 2:
-                    userChoiceFlow = new MultiPlayerFlow(game,local,handler);
+                    userChoiceFlow = new MultiPlayerFlow(game,local);
                     break;
                 case 3:
 
-                    userChoiceFlow = new MultiPlayerFlow(game,remote,handler);
+                    userChoiceFlow = new MultiPlayerFlow(game,remote);
                     break;
             }
             break;
