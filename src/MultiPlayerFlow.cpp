@@ -16,8 +16,9 @@
 #define BUF_SIZE 1024
 
 #define START_NEW_GAME 1
-#define LIST_OF_AVAILABLE_GAMES 2
-#define JOIN_GAME 3
+#define JOIN_GAME 2
+#define LIST_OF_AVAILABLE_GAMES 3
+
 
 
 using namespace std;
@@ -80,13 +81,8 @@ void MultiPlayerFlow::RunRemote() {
         int option;
         string chosenCommand = "";
         //print the optional commands that the user can send to the server: start <name>, list_games, join <name>
-       PrintingsHandler::DisplayPossibleCommands();
+        PrintingsHandler::DisplayPossibleCommands();
         cin >> option;
-
-        cout << "Please enter the following command in the correct format: start <name>" << endl;
-
-        cin >> chosenCommand;
-
 
         //first argument is the IP of the computer which the server runs on.
         //second argument is the port of the server
@@ -99,19 +95,22 @@ void MultiPlayerFlow::RunRemote() {
             exit(-1);
         }
 
-        int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
-
-        if (var == -1) {
-            cout << "Error reading arg1" << endl;
-            return exit(-1);
-        }
-        if (var == 0) {
-            cout << "Client disconnected" << endl;
-            return exit(-1);
-        }
-
-
         if (option == START_NEW_GAME) {
+
+            cout << "Please enter the following command in the correct format: start <name>" << endl;
+            getline(cin, chosenCommand);
+            getline(cin, chosenCommand);
+            int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
+
+            if (var == -1) {
+                cout << "Error reading arg1" << endl;
+                return exit(-1);
+            }
+            if (var == 0) {
+                cout << "Client disconnected" << endl;
+                return exit(-1);
+            }
+
             player = xplayer;
             opponentPlayer = oplayer;
             playerSymbol = X;
@@ -157,7 +156,8 @@ void MultiPlayerFlow::RunRemote() {
         else // option == JOIN_GAME
         {
             cout << "Please enter the following command in the correct format: join <name>" << endl;
-            cin >> chosenCommand;
+            getline(cin, chosenCommand);
+            getline(cin, chosenCommand);
             //send to the server the command entered by the user
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
             //read the response from the server

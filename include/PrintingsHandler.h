@@ -10,11 +10,6 @@
 using namespace std;
 
 class PrintingsHandler {
-
-
-
-
-
 public:
     static void PrintOuterMenu();
     static void PrintInnerMenu();
