@@ -74,6 +74,7 @@ void MultiPlayerFlow::RunRemote() {
     getline(myfile, ip);
     getline(myfile, portString);
 
+
     int port = atoi(portString.c_str());
 
 
@@ -94,14 +95,15 @@ void MultiPlayerFlow::RunRemote() {
             cout << "Failed to connect to server. Reason: " << msg << endl;
             exit(-1);
         }
-
+        //Client is about to start a new game
         if (option == START_NEW_GAME) {
-
+            //MOVE TO PRINTHANDLER
             cout << "Please enter the following command in the correct format: start <name>" << endl;
             getline(cin, chosenCommand);
             getline(cin, chosenCommand);
+            //send to the server string of the format start <name>
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
-
+            //handle errors
             if (var == -1) {
                 cout << "Error reading arg1" << endl;
                 return exit(-1);
@@ -110,14 +112,15 @@ void MultiPlayerFlow::RunRemote() {
                 cout << "Client disconnected" << endl;
                 return exit(-1);
             }
-
+            //the client that sends start new game message, is the X player
             player = xplayer;
+            //therefore, its opponent is the O player
             opponentPlayer = oplayer;
             playerSymbol = X;
             opponentPlayerSymbol = O;
-
+            //read the server's response (either "game_created_successfully" or "-1" if game already exists
             var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
-
+            //handle errors
             if (var == -1) {
                 cout << "Error reading arg1" << endl;
                 return exit(-1);
@@ -135,39 +138,57 @@ void MultiPlayerFlow::RunRemote() {
                     RunGame();
                 }
             }
+            /*answerBuffer is "-1" (=game already exists).
+             *client closes its connection to the server.
+             *ADD CLOSE CONNECTION TO THIS CLIENT IN THE SERVER SIDE
+             * (=after server sends "-1", close the connection with the id of this client)
+             */
             else{
+                //ADD PRINT OF THE SERVER'S ANSWER (THAT IS "-1")
                 close(gameClientSocket);
+                //go back to the menu. new client will connect and choose command
                 continue;
             }
         }
+        //Client is about to ask for avaiable games on the server side
         else if (option == LIST_OF_AVAILABLE_GAMES) {
             cout << "Please enter the following command in the correct format: list_games " << endl;
             cin >> chosenCommand;
             //send to the server the command entered by the user
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
-            //read the respone from the server
+            /*read the respone from the server.
+             *server's response may be "No games are available" or a string with available games.
+             */
             var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+            //in any case, connection is closed and the control will go back to the start of the loop
             close(gameClientSocket);
 
             cout << answerBuffer << endl;
             continue;
             
         }
+        //Client is about to join a game
         else // option == JOIN_GAME
         {
             cout << "Please enter the following command in the correct format: join <name>" << endl;
             getline(cin, chosenCommand);
             getline(cin, chosenCommand);
-            //send to the server the command entered by the user
+            //send to the server join <name> command
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
             //read the response from the server
             var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
-            //handle game
+            //Client joined to the requested game.
             if (strcmp(answerBuffer,"joined_to_game") == 0) {
+                //the client that joins, is the O player
                 player = oplayer;
+                //its opponent is the X player (the one the sent start <name>)
                 opponentPlayer = xplayer;
                 playerSymbol = O;
                 opponentPlayerSymbol = X;
+                /*Client reads from the server "start_game" message.
+                 *this message is sent to both players (the one that started the game, and
+                 * one who joined it). It is sent from GameHandler method (ReversiGameManager.cpp)
+                 */
                 var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
                 if (strcmp(answerBuffer,"start_game") == 0) {
                     RunGame();
@@ -175,7 +196,9 @@ void MultiPlayerFlow::RunRemote() {
             }
             //server returned either "game_is_full" or "game_not_exist"
             else {
+                //ADD PRINT OF THE SERVER ANSWER
                 close(gameClientSocket);
+                //go back to the menu. new client will connect and choose command
                 continue;
             }
 
@@ -186,17 +209,22 @@ void MultiPlayerFlow::RunRemote() {
      * SEND TO THE SERVER ONE OF THE POSSIBLE COMMANDS IN THE CORRECT FORMAT.
      * (MAKE SURE THAT THE CLIENT CAN SEND ONLY THESE FORMATS AND NOT UNRECOGNIZED STRINGS).
      *
+     *
      * IF THE USER CHOOSES GAME_LIST COMMAND, THEN PRINT THE AVAILABLE GAMES
      * SENT BY THE SERVER.
      * (anyway the client will print the response from the server. if no game available,
      * correct message will be printed).
+     *
+     *
      * PRINT CORRENT MESSAGE OF THE GAMES AVAILABLE IN THE SERVER SIDE
      * (TAKE INTO ACCOUNT THAT IN THIS CASE, CLIENT MIGHT NOT SENDS IMMEDIATELY A NEW_GAME COMMAND OR A JOIN COMMAND.)
+     *
      *
      * IF THE USER CHOOSES JOIN <NAME>, RESPONSES FROM THE SERVER MIGHT BE:
      * 'game_not_exist', 'game_is_full', 'joined_to_game'.
      * HANDLE EACH RESPONSE ACCORDINGLY.
      * concatenate to game_not_exist and game_is_full a message that ask the client to choose another name
+     *
      *
      * IF THE USER CHOOSES START <NAME>. -1 might be returned by the server, indicating that such game is already exist.
      * ask the user to enter another name.
