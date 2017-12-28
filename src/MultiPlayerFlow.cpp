@@ -196,7 +196,7 @@ void MultiPlayerFlow::RunRemote() {
             }
             //server returned either "game_is_full" or "game_not_exist"
             else {
-                //ADD PRINT OF THE SERVER ANSWER
+                cout << answerBuffer << endl;
                 close(gameClientSocket);
                 //go back to the menu. new client will connect and choose command
                 continue;

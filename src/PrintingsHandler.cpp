@@ -25,7 +25,8 @@ void PrintingsHandler::DisplayPossibleCommands(){
     cout << "Please choose one of the following options: " << endl;
     cout << "1. start new game" << endl;
     cout << "2. joining a game" << endl;
-    cout << "3. get list of available games" << endl;
+    cout << "3. get list of available games" << endl << endl;
+    cout<<"Press the number and enter to continue: ";
 
 }
 
