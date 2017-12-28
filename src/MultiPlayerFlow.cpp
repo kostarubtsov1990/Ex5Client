@@ -327,6 +327,12 @@ void MultiPlayerFlow::RunGame() {
         cout << "Wait for first move..." << endl << endl;
         //second player reads the FIRST move that is done by client1 (=first player/Xplayer)
         int n = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+
+        if (strcmp(answerBuffer, "server_shutdown")){
+            cout << "Server shut down";
+            close(gameClientSocket);
+            return;
+        }
         //second player updates its own board with the step player1 has done.
         logic->CheckPossibleMoves(board, opponentPlayer);
         logic->UpdateBoard(board, atoi(&answerBuffer[0]), atoi(&answerBuffer[2]), opponentPlayerSymbol);
@@ -350,6 +356,12 @@ void MultiPlayerFlow::RunGame() {
         //To add failure condition.
         //current player sends to the server its step (=(x,y)).
         int n = write(gameClientSocket, result.c_str(), strlen(result.c_str()) + 1);
+
+        if (n == 0) {
+            cout << "Server shut down";
+            close(gameClientSocket);
+            return;
+        }
         //Client1 will enter this condition
         if (player == xplayer)
             cout << "Wait for second player to take a move..." << endl << endl;
@@ -380,16 +392,25 @@ void MultiPlayerFlow::RunGame() {
             else
                 cout << "O played (" << ++answerBuffer[0] << "," << ++answerBuffer[2] << ")" << endl;
             //answerbuffer is "no moves"
-        } else{
+        } else if (strcmp(answerBuffer, "server_shutdown")){
+            cout << "Server shut down";
+            close(gameClientSocket);
+            return;
+        }
+        else{
             cout << "Opponent player had no possible moves." << endl;
         }
-
-
     }
     //this code will be done by only one of the clients.
     string endMassage = "END";
     //send END message to the server who passes it to the other player that will declare winner and disconnect.
     int n = write(gameClientSocket, endMassage.c_str(), strlen(endMassage.c_str()) + 1);
+
+    if (n == 0) {
+        cout << "Server shut down";
+        close(gameClientSocket);
+        return;
+    }
 
     //declare the winner of the game (or draw)
     logic->DeclareWinner(board);
