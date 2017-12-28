@@ -132,6 +132,7 @@ void MultiPlayerFlow::RunRemote() {
 
             if (strcmp(answerBuffer,"game_created_successfully") == 0) {
 
+                cout << "game created successfully! Please wait till your opponent join your game..." << endl << endl;
                 var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
 
                 if (strcmp(answerBuffer,"start_game") == 0) {
@@ -328,7 +329,7 @@ void MultiPlayerFlow::RunGame() {
         //second player reads the FIRST move that is done by client1 (=first player/Xplayer)
         int n = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
 
-        if (strcmp(answerBuffer, "server_shutdown")){
+        if (strcmp(answerBuffer, "server_shutdown") == 0){
             cout << "Server shut down";
             close(gameClientSocket);
             return;
@@ -392,7 +393,7 @@ void MultiPlayerFlow::RunGame() {
             else
                 cout << "O played (" << ++answerBuffer[0] << "," << ++answerBuffer[2] << ")" << endl;
             //answerbuffer is "no moves"
-        } else if (strcmp(answerBuffer, "server_shutdown")){
+        } else if (strcmp(answerBuffer, "server_shutdown") == 0){
             cout << "Server shut down";
             close(gameClientSocket);
             return;
