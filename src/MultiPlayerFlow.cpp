@@ -100,11 +100,9 @@ void MultiPlayerFlow::RunRemote() {
             //handle errors
             if (var == -1) {
                 cout << "Error reading arg1" << endl;
-                return exit(-1);
             }
             if (var == 0) {
                 cout << "Client disconnected" << endl;
-                return exit(-1);
             }
             //the client that sends start new game message, is the X player
             player = xplayer;
@@ -117,29 +115,29 @@ void MultiPlayerFlow::RunRemote() {
             //handle errors
             if (var == -1) {
                 cout << "Error reading arg1" << endl;
-                return exit(-1);
             }
             if (var == 0) {
                 cout << "Client disconnected" << endl;
-                return exit(-1);
             }
             if (strcmp(answerBuffer,"game_created_successfully") == 0) {
-
                 cout << "game created successfully! Please wait till your opponent join your game..." << endl << endl;
                 var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
-
+                if (var == -1) {
+                    cout << "Error reading arg1" << endl;
+                }
+                if (var == 0) {
+                    cout << "Client disconnected" << endl;
+                }
                 if (strcmp(answerBuffer,"start_game") == 0) {
                     RunGame();
                 }
             }
-            /*answerBuffer is "-1" (=game already exists).
-             *client closes its connection to the server.
-             *ADD CLOSE CONNECTION TO THIS CLIENT IN THE SERVER SIDE
-             * (=after server sends "-1", close the connection with the id of this client)
-             */
             else{
-                //ADD PRINT OF THE SERVER'S ANSWER (THAT IS "-1")
-                close(gameClientSocket);
+                //server sent "-1" to client
+                cout << "the name you entered already exists. please choose another name" << endl << endl;
+                if (close(gameClientSocket)) {
+                    cout << "Error: unable to close client socket" << endl;
+                }
                 //go back to the menu. new client will connect and choose command
                 continue;
             }
@@ -173,7 +171,9 @@ void MultiPlayerFlow::RunRemote() {
                 return exit(-1);
             }
             //in any case, connection is closed and the control will go back to the start of the loop
-            close(gameClientSocket);
+            if (close(gameClientSocket)) {
+                cout << "Error: unable to close client socket" << endl;
+            }
 
             cout << answerBuffer << endl;
             continue;
@@ -392,7 +392,9 @@ void MultiPlayerFlow::RunGame() {
         //opponent player sent "END", current player (=current client process) declares winner and closes connection
         if (strcmp(answerBuffer, "END") == 0) {
             logic->DeclareWinner(board);
-            close(gameClientSocket);
+            if (close(gameClientSocket)) {
+                cout << "Error: unable to close client socket" << endl;
+            }
             return;
         }
             //if its opponent performed a step, then he updates its own board with the opponent step.
