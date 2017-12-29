@@ -1,6 +1,9 @@
-//
-// Created by kostarubtsov1990 on 04/12/17.
-//
+/*
+ * Name: Kosta Rubtsov
+ * Id: 319206892
+ * Name: Alon Barkan
+ * Id: 200958296
+ */
 
 #include "../include/GameClient.h"
 #include <iostream>
@@ -10,9 +13,8 @@
 #include <netdb.h>
 #include <string.h>
 #include <unistd.h>
-
-
 using namespace std;
+
 GameClient::GameClient(const char* serverIP, int serverPort) :serverIP(serverIP), serverPort(serverPort), clientSocket(0) {
     cout << "Client" << endl;
 }

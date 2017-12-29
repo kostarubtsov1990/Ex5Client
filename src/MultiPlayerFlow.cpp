@@ -14,12 +14,9 @@
 #include "../include/GameClient.h"
 
 #define BUF_SIZE 1024
-
 #define START_NEW_GAME 1
 #define JOIN_GAME 2
 #define LIST_OF_AVAILABLE_GAMES 3
-
-
 
 using namespace std;
 /*
@@ -58,7 +55,6 @@ void MultiPlayerFlow::RunLocal() {
 }
 
 void MultiPlayerFlow::RunRemote() {
-
     GameLogic* logic = game->GetLogic();
     Board* board = game->GetBoard();
 
@@ -74,9 +70,7 @@ void MultiPlayerFlow::RunRemote() {
     getline(myfile, ip);
     getline(myfile, portString);
 
-
     int port = atoi(portString.c_str());
-
 
     while (true) {//client
         int option;
@@ -129,7 +123,6 @@ void MultiPlayerFlow::RunRemote() {
                 cout << "Client disconnected" << endl;
                 return exit(-1);
             }
-
             if (strcmp(answerBuffer,"game_created_successfully") == 0) {
 
                 cout << "game created successfully! Please wait till your opponent join your game..." << endl << endl;
@@ -176,8 +169,21 @@ void MultiPlayerFlow::RunRemote() {
             getline(cin, chosenCommand);
             //send to the server join <name> command
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
+            if (var == 0) {
+                cout << "Error: No Connection with Server side" << endl;
+            }
+            if (var == -1) {
+                cout << "Error: unable to execute write" << endl;
+            }
             //read the response from the server
             var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+            if (var == 0) {
+                cout << "Error: No Connection with Server side" << endl;
+            }
+            if (var == -1) {
+                cout << "Error: unable to execute read" << endl;
+            }
+
             //Client joined to the requested game.
             if (strcmp(answerBuffer,"joined_to_game") == 0) {
                 //the client that joins, is the O player
@@ -191,6 +197,12 @@ void MultiPlayerFlow::RunRemote() {
                  * one who joined it). It is sent from GameHandler method (ReversiGameManager.cpp)
                  */
                 var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+                if (var == 0) {
+                    cout << "Error: No Connection with Server side" << endl;
+                }
+                if (var == -1) {
+                    cout << "Error: unable to execute read" << endl;
+                }
                 if (strcmp(answerBuffer,"start_game") == 0) {
                     RunGame();
                 }
@@ -198,42 +210,14 @@ void MultiPlayerFlow::RunRemote() {
             //server returned either "game_is_full" or "game_not_exist"
             else {
                 cout << answerBuffer << endl;
-                close(gameClientSocket);
+                if (close(gameClientSocket)) {
+                    cout << "Error: unable to close socket" << endl;
+                }
                 //go back to the menu. new client will connect and choose command
                 continue;
             }
-
         }
     }
-    /*
-     *
-     * SEND TO THE SERVER ONE OF THE POSSIBLE COMMANDS IN THE CORRECT FORMAT.
-     * (MAKE SURE THAT THE CLIENT CAN SEND ONLY THESE FORMATS AND NOT UNRECOGNIZED STRINGS).
-     *
-     *
-     * IF THE USER CHOOSES GAME_LIST COMMAND, THEN PRINT THE AVAILABLE GAMES
-     * SENT BY THE SERVER.
-     * (anyway the client will print the response from the server. if no game available,
-     * correct message will be printed).
-     *
-     *
-     * PRINT CORRENT MESSAGE OF THE GAMES AVAILABLE IN THE SERVER SIDE
-     * (TAKE INTO ACCOUNT THAT IN THIS CASE, CLIENT MIGHT NOT SENDS IMMEDIATELY A NEW_GAME COMMAND OR A JOIN COMMAND.)
-     *
-     *
-     * IF THE USER CHOOSES JOIN <NAME>, RESPONSES FROM THE SERVER MIGHT BE:
-     * 'game_not_exist', 'game_is_full', 'joined_to_game'.
-     * HANDLE EACH RESPONSE ACCORDINGLY.
-     * concatenate to game_not_exist and game_is_full a message that ask the client to choose another name
-     *
-     *
-     * IF THE USER CHOOSES START <NAME>. -1 might be returned by the server, indicating that such game is already exist.
-     * ask the user to enter another name.
-     *
-     *
-     *
-     *
-     */
 }
 
 string MultiPlayerFlow::RunCurrentTurnOfTheGame(playerIdentifier id,
@@ -264,7 +248,6 @@ string MultiPlayerFlow::RunCurrentTurnOfTheGame(playerIdentifier id,
     ostringstream ss;
     ss << chosenCell.getX() << "," << chosenCell.getY();
     return ss.str();
-
 }
 
 void MultiPlayerFlow::PrintHandler(playerIdentifier id,
@@ -294,7 +277,6 @@ void MultiPlayerFlow::PrintHandler(playerIdentifier id,
 }
 
 Cell MultiPlayerFlow::InputHandler() const {
-
     cout << "Please enter your move row,col:";
     string input = "";
     getline(cin, input);
@@ -318,20 +300,26 @@ Cell MultiPlayerFlow::InputHandler() const {
 }
 
 void MultiPlayerFlow::RunGame() {
-
     GameLogic* logic = game->GetLogic();
     Board* board = game->GetBoard();
     char answerBuffer [BUF_SIZE];
     //sec player (the process of Client2 will enter this condition
     if (player == oplayer) {
-
         cout << "Wait for first move..." << endl << endl;
         //second player reads the FIRST move that is done by client1 (=first player/Xplayer)
         int n = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+        if (n == 0) {
+            cout << "Error: No Connection with Server side" << endl;
+        }
+        if (n == -1) {
+            cout << "Error: unable to execute read" << endl;
+        }
 
         if (strcmp(answerBuffer, "server_shutdown") == 0){
             cout << "Server shut down";
-            close(gameClientSocket);
+            if (close(gameClientSocket)) {
+                cout << "Error: unable to close socket" << endl;
+            }
             return;
         }
         //second player updates its own board with the step player1 has done.
@@ -341,7 +329,6 @@ void MultiPlayerFlow::RunGame() {
         //cout << endl << endl;
         //n == -1 , n == 0..clients disconnected
     }
-
     //both clients print their board (Client1's board will be the initial board.
     //Client2's board will be the board updated with Client1's step.
     cout << "current board:" << endl << endl;
@@ -363,6 +350,9 @@ void MultiPlayerFlow::RunGame() {
             close(gameClientSocket);
             return;
         }
+        if (n == -1) {
+            cout << "Error: unable to execute write" << endl;
+        }
         //Client1 will enter this condition
         if (player == xplayer)
             cout << "Wait for second player to take a move..." << endl << endl;
@@ -372,6 +362,14 @@ void MultiPlayerFlow::RunGame() {
 
         //current player reads from the server the step that its opponent has done.
         n = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+        if (n == 0) {
+            cout << "Error: no connection with server";
+            return;
+        }
+        if (n == -1) {
+            cout << "Error: unable to execute read" << endl;
+            return;
+        }
 
         //opponent player sent "END", current player (=current client process) declares winner and closes connection
         if (strcmp(answerBuffer, "END") == 0) {
@@ -406,17 +404,22 @@ void MultiPlayerFlow::RunGame() {
     string endMassage = "END";
     //send END message to the server who passes it to the other player that will declare winner and disconnect.
     int n = write(gameClientSocket, endMassage.c_str(), strlen(endMassage.c_str()) + 1);
-
+    if (n == -1) {
+        cout << "Error: unable to execute write" << endl;
+    }
     if (n == 0) {
         cout << "Server shut down";
-        close(gameClientSocket);
+        if (close(gameClientSocket)) {
+            cout << "Error: unable to execute close" << endl;
+        }
         return;
     }
-
     //declare the winner of the game (or draw)
     logic->DeclareWinner(board);
     //current player disconnects
-    close(gameClientSocket);
+    if (close(gameClientSocket)) {
+        cout << "Error: unable to execute close" << endl;
+    }
 }
 
 MultiPlayerFlow::~MultiPlayerFlow() {

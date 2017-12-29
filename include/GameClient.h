@@ -18,5 +18,4 @@ private:
 
 };
 
-
 #endif //EX4_GAMECLIENT_H
