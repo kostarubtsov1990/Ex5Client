@@ -150,10 +150,28 @@ void MultiPlayerFlow::RunRemote() {
             cin >> chosenCommand;
             //send to the server the command entered by the user
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
+
+            if (var == -1) {
+                cout << "Error reading arg1" << endl;
+                return exit(-1);
+            }
+            if (var == 0) {
+                cout << "Client disconnected" << endl;
+                return exit(-1);
+            }
             /*read the respone from the server.
              *server's response may be "No games are available" or a string with available games.
              */
             var = read(gameClientSocket, answerBuffer, sizeof(answerBuffer));
+
+            if (var == -1) {
+                cout << "Error reading arg1" << endl;
+                return exit(-1);
+            }
+            if (var == 0) {
+                cout << "Client disconnected" << endl;
+                return exit(-1);
+            }
             //in any case, connection is closed and the control will go back to the start of the loop
             close(gameClientSocket);
 
@@ -316,7 +334,7 @@ void MultiPlayerFlow::RunGame() {
         }
 
         if (strcmp(answerBuffer, "server_shutdown") == 0){
-            cout << "Server shut down";
+            cout << "Server shut down"<< endl << endl;
             if (close(gameClientSocket)) {
                 cout << "Error: unable to close socket" << endl;
             }
@@ -346,7 +364,7 @@ void MultiPlayerFlow::RunGame() {
         int n = write(gameClientSocket, result.c_str(), strlen(result.c_str()) + 1);
 
         if (n == 0) {
-            cout << "Server shut down";
+            cout << "Server shut down"<< endl << endl;
             close(gameClientSocket);
             return;
         }
@@ -378,7 +396,7 @@ void MultiPlayerFlow::RunGame() {
             return;
         }
             //if its opponent performed a step, then he updates its own board with the opponent step.
-        else if (strcmp(answerBuffer, "no_moves")) {
+        else if (strcmp(answerBuffer, "no_moves") && strcmp(answerBuffer, "server_shutdown")) {
             logic->CheckPossibleMoves(board, opponentPlayer);
             logic->UpdateBoard(board, atoi(&answerBuffer[0]), atoi(&answerBuffer[2]), opponentPlayerSymbol);
 
@@ -392,7 +410,7 @@ void MultiPlayerFlow::RunGame() {
                 cout << "O played (" << ++answerBuffer[0] << "," << ++answerBuffer[2] << ")" << endl;
             //answerbuffer is "no moves"
         } else if (strcmp(answerBuffer, "server_shutdown") == 0){
-            cout << "Server shut down";
+            cout << "Server shut down" << endl << endl;
             close(gameClientSocket);
             return;
         }
@@ -408,7 +426,7 @@ void MultiPlayerFlow::RunGame() {
         cout << "Error: unable to execute write" << endl;
     }
     if (n == 0) {
-        cout << "Server shut down";
+        cout << "Server shut down"<< endl << endl;
         if (close(gameClientSocket)) {
             cout << "Error: unable to execute close" << endl;
         }
