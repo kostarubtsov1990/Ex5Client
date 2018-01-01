@@ -128,6 +128,8 @@ void MultiPlayerFlow::RunRemote() {
                 }
                 if (strcmp(answerBuffer,"start_game") == 0) {
                     RunGame();
+                    delete board;
+                    game->SetBoard(new Board());
                 }
             }
             else{
