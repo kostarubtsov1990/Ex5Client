@@ -99,7 +99,6 @@ void MultiPlayerFlow::RunRemote() {
         }
         //Client is about to start a new game
         if (numericOption == START_NEW_GAME) {
-            //MOVE TO PRINTHANDLER
             cout << "Please enter the following command in the correct format: start <name>" << endl;
             getline(cin, chosenCommand);
             getline(cin, chosenCommand);
