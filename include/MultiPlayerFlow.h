@@ -44,6 +44,7 @@ private:
     void PrintHandler(playerIdentifier id, const vector<Cell>& possibleLocations) const;
     string RunCurrentTurnOfTheGame(playerIdentifier id, boardContent symbol);
     Cell InputHandler() const;
+    void ConnectToServer ();
 };
 
 #endif //EX2_MULTIPLAYERFLOW_H

@@ -16,7 +16,6 @@
 using namespace std;
 
 GameClient::GameClient(const char* serverIP, int serverPort) :serverIP(serverIP), serverPort(serverPort), clientSocket(0) {
-    cout << "Client" << endl;
 }
 
 int GameClient::connectToServer() {

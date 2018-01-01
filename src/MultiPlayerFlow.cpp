@@ -62,15 +62,7 @@ void MultiPlayerFlow::RunRemote() {
     char answerBuffer [BUF_SIZE];
     bzero(&answerBuffer,sizeof(answerBuffer));
 
-    //Read the settings from file.
-    const char* fileName = "settings.txt";
-    string ip;
-    string portString;
-    ifstream myfile(fileName);
-    getline(myfile, ip);
-    getline(myfile, portString);
 
-    int port = atoi(portString.c_str());
 
     while (true) {//client
         string option = "";
@@ -87,16 +79,7 @@ void MultiPlayerFlow::RunRemote() {
             numericOption = atoi(option.c_str());
         }
 
-        //first argument is the IP of the computer which the server runs on.
-        //second argument is the port of the server
-        GameClient gameClient(ip.c_str(), port);
-        try {
-            //sort of file descriptor. after this line, client is connected to server
-            gameClientSocket = gameClient.connectToServer();
-        }catch (const char* msg) {
-            cout << "Failed to connect to server. Reason: " << msg << endl;
-            exit(-1);
-        }
+
         //Client is about to start a new game
         if (numericOption == START_NEW_GAME) {
             cout << "Please enter the following command in the correct format: start <name>" << endl;
@@ -104,10 +87,12 @@ void MultiPlayerFlow::RunRemote() {
             getline(cin, chosenCommand);
 
             while (chosenCommand.find("start") == string::npos) {
-                cout << "Wrong command' please enter 'start' instead" << endl;
+                cout << "Wrong command" << endl;
+                cout << "Please enter the following command in the correct format: start <name>" << endl;
                 getline(cin, chosenCommand);
             }
 
+            ConnectToServer();
             //send to the server string of the format start <name>
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
             //handle errors
@@ -157,13 +142,16 @@ void MultiPlayerFlow::RunRemote() {
         }
         //Client is about to ask for avaiable games on the server side
         else if (numericOption == LIST_OF_AVAILABLE_GAMES) {
-            cout << "Please enter the following command in the correct format: list_games " << endl;
+            cout << "Please enter the following command in the correct format: list_games" << endl;
             cin >> chosenCommand;
 
             while (chosenCommand.find("list_games") == string::npos) {
-                cout << "Wrong command' please enter 'list_games' instead" << endl;
+                cout << "Wrong command" << endl;
+                cout << "Please enter the following command in the correct format: list_games" << endl;
                 cin >> chosenCommand;
             }
+
+            ConnectToServer();
             //send to the server the command entered by the user
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
 
@@ -205,9 +193,12 @@ void MultiPlayerFlow::RunRemote() {
             getline(cin, chosenCommand);
 
             while (chosenCommand.find("join") == string::npos) {
-                cout << "Wrong command' please enter 'join' instead" << endl;
+                cout << "Wrong command" << endl;
+                cout << "Please enter the following command in the correct format: join <name>" << endl;
                 getline(cin, chosenCommand);
             }
+
+            ConnectToServer();
             //send to the server join <name> command
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
             if (var == 0) {
@@ -462,6 +453,29 @@ void MultiPlayerFlow::RunGame() {
     //current player disconnects
     if (close(gameClientSocket)) {
         cout << "Error: unable to execute close" << endl;
+    }
+}
+
+void MultiPlayerFlow::ConnectToServer() {
+    //Read the settings from file.
+    const char* fileName = "settings.txt";
+    string ip;
+    string portString;
+    ifstream myfile(fileName);
+    getline(myfile, ip);
+    getline(myfile, portString);
+
+    int port = atoi(portString.c_str());
+
+    //first argument is the IP of the computer which the server runs on.
+    //second argument is the port of the server
+    GameClient gameClient(ip.c_str(), port);
+    try {
+        //sort of file descriptor. after this line, client is connected to server
+        gameClientSocket = gameClient.connectToServer();
+    }catch (const char* msg) {
+        cout << "Failed to connect to server. Reason: " << msg << endl;
+        exit(-1);
     }
 }
 
