@@ -69,13 +69,13 @@ void MultiPlayerFlow::RunRemote() {
         string chosenCommand = "";
         //print the optional commands that the user can send to the server: start <name>, list_games, join <name>
         PrintingsHandler::DisplayPossibleCommands();
-        cin >> option;
+        getline(cin, option);
 
         int numericOption = atoi(option.c_str());
 
         while  (numericOption != 3 && numericOption != 2 && numericOption != 1) {
             cout << "Wrong number please choose one of the possible numbers: 1, 2, 3" << endl;
-            cin >> option;
+            getline(cin, option);
             numericOption = atoi(option.c_str());
         }
 
@@ -83,7 +83,6 @@ void MultiPlayerFlow::RunRemote() {
         //Client is about to start a new game
         if (numericOption == START_NEW_GAME) {
             cout << "Please enter the following command in the correct format: start <name>" << endl;
-            getline(cin, chosenCommand);
             getline(cin, chosenCommand);
 
             while (chosenCommand.find("start") == string::npos) {
@@ -146,7 +145,6 @@ void MultiPlayerFlow::RunRemote() {
         else if (numericOption == LIST_OF_AVAILABLE_GAMES) {
             cout << "Please enter the following command in the correct format: list_games" << endl;
             getline(cin, chosenCommand);
-            getline(cin, chosenCommand);
 
             while (chosenCommand.find("list_games") == string::npos) {
                 cout << "Wrong command" << endl;
@@ -192,7 +190,6 @@ void MultiPlayerFlow::RunRemote() {
         else // option == JOIN_GAME
         {
             cout << "Please enter the following command in the correct format: join <name>" << endl;
-            getline(cin, chosenCommand);
             getline(cin, chosenCommand);
 
             while (chosenCommand.find("join") == string::npos) {
