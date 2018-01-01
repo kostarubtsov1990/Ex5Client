@@ -145,12 +145,13 @@ void MultiPlayerFlow::RunRemote() {
         //Client is about to ask for avaiable games on the server side
         else if (numericOption == LIST_OF_AVAILABLE_GAMES) {
             cout << "Please enter the following command in the correct format: list_games" << endl;
-            cin >> chosenCommand;
+            getline(cin, chosenCommand);
+            getline(cin, chosenCommand);
 
             while (chosenCommand.find("list_games") == string::npos) {
                 cout << "Wrong command" << endl;
                 cout << "Please enter the following command in the correct format: list_games" << endl;
-                cin >> chosenCommand;
+                getline(cin, chosenCommand);
             }
 
             ConnectToServer();
@@ -239,6 +240,8 @@ void MultiPlayerFlow::RunRemote() {
                 }
                 if (strcmp(answerBuffer,"start_game") == 0) {
                     RunGame();
+                    delete board;
+                    game->SetBoard(new Board());
                 }
             }
             //server returned either "game_is_full" or "game_not_exist"
