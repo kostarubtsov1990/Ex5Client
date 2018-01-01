@@ -6,6 +6,7 @@
  */
 
 #include <cstdio>
+#include <cstdlib>
 #include "../include/ReversiGameMenu.h"
 
 
@@ -13,14 +14,31 @@
 void ReversiGameMenu::Start() {
     PrintingsHandler::PrintOuterMenu();
 
-    int gameOption;
-    cin>>gameOption;
+    string option;
+
+    cin>>option;
+    int gameOption = atoi(option.c_str());
+
+
+    while  (gameOption != 3 && gameOption != 2 && gameOption != 1) {
+        cout << "Wrong number please choose one of the possible numbers: 1, 2, 3" << endl;
+        cin >> option;
+        gameOption = atoi(option.c_str());
+    }
 
     PrintingsHandler::PrintInnerMenu();
 
-    int gameStyleOption;
-    cin>>gameStyleOption;
+
+    cin>>option;
+    int gameStyleOption = atoi(option.c_str());
     getchar();
+
+
+    while  (gameStyleOption != 2 && gameStyleOption != 1) {
+        cout << "Wrong number please choose one of the possible numbers: 1, 2" << endl;
+        cin >> option;
+        gameStyleOption = atoi(option.c_str());
+    }
 
     GameLogic* logic;
     Game* game;

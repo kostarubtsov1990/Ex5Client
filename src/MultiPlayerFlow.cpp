@@ -73,11 +73,19 @@ void MultiPlayerFlow::RunRemote() {
     int port = atoi(portString.c_str());
 
     while (true) {//client
-        int option;
+        string option = "";
         string chosenCommand = "";
         //print the optional commands that the user can send to the server: start <name>, list_games, join <name>
         PrintingsHandler::DisplayPossibleCommands();
         cin >> option;
+
+        int numericOption = atoi(option.c_str());
+
+        while  (numericOption != 3 && numericOption != 2 && numericOption != 1) {
+            cout << "Wrong number please choose one of the possible numbers: 1, 2, 3" << endl;
+            cin >> option;
+            numericOption = atoi(option.c_str());
+        }
 
         //first argument is the IP of the computer which the server runs on.
         //second argument is the port of the server
@@ -90,11 +98,17 @@ void MultiPlayerFlow::RunRemote() {
             exit(-1);
         }
         //Client is about to start a new game
-        if (option == START_NEW_GAME) {
+        if (numericOption == START_NEW_GAME) {
             //MOVE TO PRINTHANDLER
             cout << "Please enter the following command in the correct format: start <name>" << endl;
             getline(cin, chosenCommand);
             getline(cin, chosenCommand);
+
+            while (chosenCommand.find("start") == string::npos) {
+                cout << "Wrong command' please enter 'start' instead" << endl;
+                getline(cin, chosenCommand);
+            }
+
             //send to the server string of the format start <name>
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
             //handle errors
@@ -143,9 +157,14 @@ void MultiPlayerFlow::RunRemote() {
             }
         }
         //Client is about to ask for avaiable games on the server side
-        else if (option == LIST_OF_AVAILABLE_GAMES) {
+        else if (numericOption == LIST_OF_AVAILABLE_GAMES) {
             cout << "Please enter the following command in the correct format: list_games " << endl;
             cin >> chosenCommand;
+
+            while (chosenCommand.find("list_games") == string::npos) {
+                cout << "Wrong command' please enter 'list_games' instead" << endl;
+                cin >> chosenCommand;
+            }
             //send to the server the command entered by the user
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
 
@@ -185,6 +204,11 @@ void MultiPlayerFlow::RunRemote() {
             cout << "Please enter the following command in the correct format: join <name>" << endl;
             getline(cin, chosenCommand);
             getline(cin, chosenCommand);
+
+            while (chosenCommand.find("join") == string::npos) {
+                cout << "Wrong command' please enter 'join' instead" << endl;
+                getline(cin, chosenCommand);
+            }
             //send to the server join <name> command
             int var = write(gameClientSocket, chosenCommand.c_str(), strlen(chosenCommand.c_str()) + 1);
             if (var == 0) {
